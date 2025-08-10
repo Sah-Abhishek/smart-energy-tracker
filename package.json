@@ -12,6 +12,8 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "chart.js": "^4.5.0",
+    "date-fns": "^4.1.0",
+    "dayjs": "^1.11.13",
     "firebase": "^12.1.0",
     "lucide-react": "^0.537.0",
     "react": "^19.1.1",

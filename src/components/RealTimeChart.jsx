@@ -9,8 +9,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
-import { db } from "../firebase.js";
+import { fetchReadings } from '../data/FetchData.jsx'; // ✅ Correct import
 
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
 
@@ -22,54 +21,46 @@ const RealTimeChart = () => {
   const [powerData, setPowerData] = useState([]);
 
   useEffect(() => {
-    const q = query(
-      collection(db, "energy_readings"),
-      orderBy("timestamp", "desc"),
-      limit(20) // last 10 readings
-    );
+    let unsubscribeFn;
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const readings = [];
-      snapshot.forEach(doc => readings.push(doc.data()));
+    const getData = async () => {
+      unsubscribeFn = await fetchReadings((readings) => {
+        setLabels(
+          readings.map((r) => {
+            const dateObj = r.timestamp?.toDate
+              ? r.timestamp.toDate()
+              : new Date(r.timestamp);
+            return dateObj.toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+            });
+          })
+        );
 
-      console.log("Fetched readings from Firestore:", readings);
+        setVoltageData(readings.map(r => r.voltage));
+        setCurrentData(readings.map(r => r.current));
+        setPowerData(readings.map(r => r.power));
+      });
+    };
 
-      // Reverse for chronological order
-      readings.reverse();
+    getData();
 
-      setLabels(
-        readings.map(r => {
-          // Handle Firestore Timestamp
-          let dateObj;
-          if (r.timestamp?.toDate) {
-            dateObj = r.timestamp.toDate(); // Timestamp -> JS Date
-          } else {
-            dateObj = new Date(r.timestamp); // if it's already a string or ms
-          }
-
-          return dateObj.toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-          });
-        })
-      );
-
-      setVoltageData(readings.map(r => r.voltage));
-      setCurrentData(readings.map(r => r.current));
-      setPowerData(readings.map(r => r.power));
-    });
-
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribeFn) {
+        unsubscribeFn();
+      }
+    };
   }, []);
+
   const metricMap = {
     Voltage: voltageData,
     Current: currentData,
-    Power: powerData
+    Power: powerData,
   };
 
   const chartData = {
-    labels: labels,
+    labels,
     datasets: [
       {
         label: selectedMetric,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BoltIcon, Cog6ToothIcon, UserCircleIcon } from '@heroicons/react/24/solid';
+import UsageStatsCard from './UsageStatsCard';
 
 const Navbar = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -32,18 +33,7 @@ const Navbar = () => {
       </div>
 
       {/* Center: Stats */}
-      <div className="flex items-center space-x-4 bg-gray-50 px-4 py-1.5 rounded-md">
-        <div className="text-xs text-gray-500">
-          <span className="block">Today's Usage</span>
-          <span className="text-base font-semibold text-gray-900">3.8 kWh</span>
-        </div>
-        <div className="w-px bg-gray-300 h-6" />
-        <div className="text-xs text-gray-500">
-          <span className="block">Peak Power</span>
-          <span className="text-base font-semibold text-gray-900">1.24 kW</span>
-        </div>
-      </div>
-
+      <UsageStatsCard />
       {/* Right: Date, Time, Icons */}
       <div className="flex items-center space-x-4">
         <div className="text-right text-xs">

@@ -1,59 +1,70 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   BoltIcon,
   BoltSlashIcon,
   ChartBarIcon,
 } from '@heroicons/react/24/solid';
-import { Plug } from 'lucide-react'
-
-const stats = [
-  {
-    label: 'Voltage',
-    value: '221.8',
-    unit: 'V',
-    icon: <BoltIcon className="h-5 w-5 text-blue-600" />,
-    border: 'border-l-4 border-blue-500',
-    bg: 'bg-blue-100',
-    change: '+0.4%',
-    changeColor: 'text-green-500',
-    sub: 'Updated just now',
-  },
-  {
-    label: 'Current',
-    value: '5.2',
-    unit: 'A',
-    icon: <BoltSlashIcon className="h-5 w-5 text-green-600" />,
-    border: 'border-l-4 border-green-500',
-    bg: 'bg-green-100',
-    change: '-1.2%',
-    changeColor: 'text-red-500',
-    sub: 'Updated just now',
-  },
-  {
-    label: 'Power',
-    value: '1,153',
-    unit: 'W',
-    icon: <Plug className="h-5 w-5 text-yellow-600" />,
-    border: 'border-l-4 border-yellow-400',
-    bg: 'bg-yellow-100',
-    change: '+2.8%',
-    changeColor: 'text-green-500',
-    sub: 'Updated just now',
-  },
-  {
-    label: 'Total Energy',
-    value: '3.8',
-    unit: 'kWh',
-    icon: <ChartBarIcon className="h-5 w-5 text-purple-600" />,
-    border: 'border-l-4 border-purple-500',
-    bg: 'bg-purple-100',
-    change: 'Today',
-    changeColor: 'text-gray-500',
-    sub: 'Updated just now',
-  },
-];
+import { Plug } from 'lucide-react';
+import { fetchLatestReading, listenToLatestReading } from '../data/FetchData.jsx';
 
 const EnergyStats = () => {
+  const [reading, setReading] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = listenToLatestReading((data) => {
+      setReading(data);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const stats = reading ? [
+    {
+      label: 'Voltage',
+      value: reading.voltage,
+      unit: 'V',
+      icon: <BoltIcon className="h-5 w-5 text-blue-600" />,
+      border: 'border-l-4 border-blue-500',
+      bg: 'bg-blue-100',
+      change: '+0.4%',
+      changeColor: 'text-green-500',
+      sub: 'Updated just now',
+    },
+    {
+      label: 'Current',
+      value: reading.current,
+      unit: 'A',
+      icon: <BoltSlashIcon className="h-5 w-5 text-green-600" />,
+      border: 'border-l-4 border-green-500',
+      bg: 'bg-green-100',
+      change: '-1.2%',
+      changeColor: 'text-red-500',
+      sub: 'Updated just now',
+    },
+    {
+      label: 'Power',
+      value: reading.power,
+      unit: 'W',
+      icon: <Plug className="h-5 w-5 text-yellow-600" />,
+      border: 'border-l-4 border-yellow-400',
+      bg: 'bg-yellow-100',
+      change: '+2.8%',
+      changeColor: 'text-green-500',
+      sub: 'Updated just now',
+    },
+    {
+      label: 'Total Energy',
+      value: '3.8', // This can come from another field if stored
+      unit: 'kWh',
+      icon: <ChartBarIcon className="h-5 w-5 text-purple-600" />,
+      border: 'border-l-4 border-purple-500',
+      bg: 'bg-purple-100',
+      change: 'Today',
+      changeColor: 'text-gray-500',
+      sub: 'Updated just now',
+    },
+  ] : [];
+
   return (
     <div className="flex flex-wrap gap-6 justify-between">
       {stats.map((stat, idx) => (
