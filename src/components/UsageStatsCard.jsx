@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
-import { db } from "../data/FetchData.jsx"; // Import your Firestore db
+import { db } from "../data/FetchData.jsx"; // Your Firestore import
 import dayjs from "dayjs";
 
 const UsageStatsCard = () => {
@@ -10,65 +10,55 @@ const UsageStatsCard = () => {
   useEffect(() => {
     const fetchUsageData = async () => {
       try {
-        const now = new Date();
+        const now = dayjs();
 
-        // Calculate start and end of today in IST
-        const todayStartIST = dayjs(now).startOf("day");
-        const todayEndIST = dayjs(now).endOf("day");
+        // Get start and end of today in local timezone as ISO strings matching your format
+        const todayStartString = now.startOf("day").format("YYYY-MM-DDTHH:mm:ss.SSSZ");
+        const todayEndString = now.endOf("day").format("YYYY-MM-DDTHH:mm:ss.SSSZ");
 
-        // Format as the same string type stored in Firestore
-        const startString = todayStartIST.format("YYYY-MM-DDTHH:mm:ss.SSSZ");
-        const endString = todayEndIST.format("YYYY-MM-DDTHH:mm:ss.SSSZ");
-
-        // console.log("Query range strings:", startString, endString);
-
-        // Query Firestore (string comparison)
+        // Query Firestore with string range filters
         const q = query(
-          collection(db, "energy_readings"),
-          where("timestamp", ">=", startString),
-          where("timestamp", "<=", endString),
+          collection(db, "sensorData"),
+          where("timestamp", ">=", todayStartString),
+          where("timestamp", "<=", todayEndString),
           orderBy("timestamp", "asc")
         );
 
         const snapshot = await getDocs(q);
-        const readings = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          timestamp: new Date(doc.data().timestamp) // parse back to Date object
-        }));
 
-        // console.log("Readings Array:", readings);
+        // Map docs and parse timestamp strings back to Date
+        const readings = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            timestamp: new Date(data.timestamp), // Convert ISO string to Date object
+          };
+        });
 
-        if (!readings.length) {
+        if (readings.length === 0) {
           console.warn("No readings found for today");
+          setTodaysUsage("0.00");
+          setPeakPower("0.00");
           return;
         }
 
         let totalEnergyKWh = 0;
         let maxPowerW = 0;
-        let peakTimestamp = null;
         let lastTimestamp = null;
 
-        readings.forEach((data) => {
-          const ts = data.timestamp;
-          const powerW = Number(data.power) || 0;
+        readings.forEach(({ power, timestamp }) => {
+          const powerW = Number(power) || 0;
 
           if (lastTimestamp) {
-            const timeDiffHours = (ts - lastTimestamp) / (1000 * 60 * 60);
+            const timeDiffHours = (timestamp - lastTimestamp) / (1000 * 60 * 60);
             totalEnergyKWh += (powerW * timeDiffHours) / 1000;
           }
 
-          if (powerW > maxPowerW) {
-            maxPowerW = powerW;
-            peakTimestamp = ts;
-          }
+          if (powerW > maxPowerW) maxPowerW = powerW;
 
-          lastTimestamp = ts;
+          lastTimestamp = timestamp;
         });
-
-        console.log(
-          `Peak Power Today: ${maxPowerW} W at ${peakTimestamp?.toLocaleString()}`
-        );
 
         setTodaysUsage(totalEnergyKWh.toFixed(2));
         setPeakPower((maxPowerW / 1000).toFixed(2));

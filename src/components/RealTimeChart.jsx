@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { fetchReadings } from '../data/FetchData.jsx'; // ✅ Correct import
+import { fetchReadings } from '../data/FetchData.jsx';
 
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
 
@@ -25,12 +25,18 @@ const RealTimeChart = () => {
 
     const getData = async () => {
       unsubscribeFn = await fetchReadings((readings) => {
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        const todayReadings = readings.filter((r) => {
+          const dateObj = new Date(r.timestamp);
+          return dateObj >= todayStart;
+        });
+
         setLabels(
-          readings.map((r) => {
-            const dateObj = r.timestamp?.toDate
-              ? r.timestamp.toDate()
-              : new Date(r.timestamp);
-            return dateObj.toLocaleTimeString([], {
+          todayReadings.map((r) => {
+            const dateObj = new Date(r.timestamp);
+            return dateObj.toLocaleTimeString('en-IN', {
               hour: '2-digit',
               minute: '2-digit',
               second: '2-digit',
@@ -38,9 +44,9 @@ const RealTimeChart = () => {
           })
         );
 
-        setVoltageData(readings.map(r => r.voltage));
-        setCurrentData(readings.map(r => r.current));
-        setPowerData(readings.map(r => r.power));
+        setVoltageData(todayReadings.map((r) => r.voltage));
+        setCurrentData(todayReadings.map((r) => r.current));
+        setPowerData(todayReadings.map((r) => r.power));
       });
     };
 
@@ -102,14 +108,17 @@ const RealTimeChart = () => {
                 key={metric}
                 onClick={() => setSelectedMetric(metric)}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium ${selectedMetric === metric
-                  ? 'bg-blue-100 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-blue-100 text-blue-600'
+                    : 'text-gray-700 hover:bg-gray-100'
                   }`}
               >
                 {metric}
               </button>
             ))}
-            <select className="ml-2 text-sm bg-gray-100 text-gray-700 px-2 py-1.5 rounded-md focus:outline-none">
+            <select
+              disabled
+              className="ml-2 text-sm bg-gray-100 text-gray-700 px-2 py-1.5 rounded-md focus:outline-none"
+            >
               <option>Last 10 readings</option>
               <option>Last 30 minutes</option>
               <option>Last hour</option>

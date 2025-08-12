@@ -37,7 +37,7 @@ const MonthlyBillPrediction = () => {
         const daysRemaining = differenceInDays(monthEnd, now);
 
         // Fetch readings for the current month
-        const readingsRef = collection(db, "energy_readings");
+        const readingsRef = collection(db, "sensorData");
         const q = query(
           readingsRef,
           where("timestamp", ">=", monthStart.toISOString()),
@@ -116,7 +116,7 @@ const MonthlyBillPrediction = () => {
       <div>
         <div className="flex justify-between text-sm text-gray-700 mb-2">
           <span className="font-bold text-gray-500">Current Usage</span>
-          <span>${data.currentUsage.toFixed(2)}</span>
+          <span className="inline-flex items-center"><FaIndianRupeeSign />{data.currentUsage.toFixed(2)}</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2.5">
           <div
@@ -130,8 +130,8 @@ const MonthlyBillPrediction = () => {
       <div>
         <div className="flex justify-between text-sm text-gray-700 mb-2">
           <span className="font-bold text-gray-500">Projected Usage</span>
-          <span className="font-bold">
-            ${data.projectedUsage.toFixed(2)}
+          <span className="font-bold inline-flex items-center">
+            <FaIndianRupeeSign />{data.projectedUsage.toFixed(2)}
           </span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2.5">

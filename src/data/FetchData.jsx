@@ -27,7 +27,7 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
 export const db = getFirestore(app);
 
 // Reference to Firestore collection
-const readingsRef = collection(db, "energy_readings");
+const readingsRef = collection(db, "sensorData");
 
 // ✅ Add a new reading
 export const addEnergyReading = async (data) => {
